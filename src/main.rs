@@ -1,4 +1,4 @@
-//! AIChat Binary Entry Point
+//! GtkSynapse Binary Entry Point
 
 fn main() -> gtk4::glib::ExitCode {
     // Initialize logging
@@ -6,6 +6,6 @@ fn main() -> gtk4::glib::ExitCode {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    tracing::info!("Starting AIChat application...");
-    aichat::run_app()
+    tracing::info!("Starting GtkSynapse application...");
+    gtksynapse::run_app()
 }

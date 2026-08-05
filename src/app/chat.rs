@@ -37,7 +37,7 @@ impl ChatView {
         icon.add_css_class("chat-empty-icon");
         empty_state.append(&icon);
 
-        let title = gtk::Label::new(Some("Welcome to AIChat"));
+        let title = gtk::Label::new(Some("Welcome to GtkSynapse"));
         title.add_css_class("chat-empty-title");
         empty_state.append(&title);
 

@@ -177,7 +177,7 @@ impl ProviderRegistry {
     // ── Keyring helpers ───────────────────────────────────────────
 
     /// The keyring service name for the application.
-    const SERVICE: &'static str = "io.github.daniel.aichat";
+    const SERVICE: &'static str = "io.github.daniel.gtksynapse";
 
     /// Load an API key for a provider.
     ///
@@ -254,7 +254,7 @@ impl ProviderRegistry {
 
 /// Path to the local fallback API key store.
 fn keys_file_path() -> Option<PathBuf> {
-    let dir = dirs::config_dir()?.join("aichat");
+    let dir = dirs::config_dir()?.join("gtksynapse");
     std::fs::create_dir_all(&dir).ok()?;
     Some(dir.join("api_keys.json"))
 }
@@ -288,7 +288,7 @@ mod tests {
 
     #[test]
     fn api_key_file_roundtrip() {
-        let tmp = std::env::temp_dir().join(format!("aichat-key-test-{}", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("gtksynapse-key-test-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         std::env::set_var("XDG_CONFIG_HOME", &tmp);
 

@@ -8,9 +8,7 @@ use std::path::Path;
 pub fn open_image_viewer(parent: &impl IsA<gtk::Widget>, path: &Path) {
     let dialog = gtk::Window::new();
     dialog.set_title(Some(
-        path.file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("Image"),
+        path.file_name().and_then(|n| n.to_str()).unwrap_or("Image"),
     ));
     dialog.set_default_size(800, 600);
     dialog.set_modal(true);

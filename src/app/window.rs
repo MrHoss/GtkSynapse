@@ -245,7 +245,7 @@ impl MainWindow {
         runtime: tokio::runtime::Handle,
     ) -> Self {
         let window = adw::ApplicationWindow::new(app);
-        window.set_title(Some("AIChat"));
+        window.set_title(Some("GtkSynapse"));
         window.set_default_size(960, 680);
         window.add_css_class("main-window");
 
@@ -254,7 +254,7 @@ impl MainWindow {
         // ── Sidebar Panel ──
         let sidebar = Arc::new(Mutex::new(SidebarPanel::new(storage.clone())));
         let sidebar_page = adw::NavigationPage::new(&sidebar.lock().unwrap().container, "Sidebar");
-        sidebar_page.set_title("AIChat");
+        sidebar_page.set_title("GtkSynapse");
         split_view.set_sidebar(Some(&sidebar_page));
 
         // ── Chat Main Area View ──

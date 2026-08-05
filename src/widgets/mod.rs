@@ -1,4 +1,4 @@
-//! Custom widgets for the AIChat application.
+//! Custom widgets for the GtkSynapse application.
 
 pub mod attachment_chip;
 pub mod chat_bubble;

@@ -721,7 +721,7 @@ impl MediaView {
                 } else {
                     "webp"
                 };
-                dialog.set_initial_name(Some(&format!("aichat-image.{}", ext)));
+                dialog.set_initial_name(Some(&format!("gtksynapse-image.{}", ext)));
                 if let Some(root) = container_root.root() {
                     if let Ok(win) = root.downcast::<gtk::Window>() {
                         let data = data_for_save.clone();

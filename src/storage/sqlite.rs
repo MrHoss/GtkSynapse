@@ -1,7 +1,7 @@
 //! SQLite persistence layer — conversations, messages, attachments, settings.
 //!
 //! Uses `rusqlite` with the "bundled" feature so no system SQLite is required.
-//! The database is created at `~/.local/share/aichat/aichat.db`.
+//! The database is created at `~/.local/share/gtksynapse/gtksynapse.db`.
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, TimeZone, Utc};
@@ -390,8 +390,8 @@ fn migrate_kind_column(conn: &Connection) -> Result<()> {
 fn default_db_path() -> Result<PathBuf> {
     let data_dir = dirs::data_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("aichat");
-    Ok(data_dir.join("aichat.db"))
+        .join("gtksynapse");
+    Ok(data_dir.join("gtksynapse.db"))
 }
 
 // ─── SQL Schema ──────────────────────────────────────────────

@@ -1,4 +1,4 @@
-//! AIChat Library - Core, Storage, Providers, Widgets, and Application UI modules.
+//! GtkSynapse Library - Core, Storage, Providers, Widgets, and Application UI modules.
 
 pub mod core;
 pub mod providers;
@@ -17,18 +17,18 @@ use crate::app::MainWindow;
 
 pub fn run_app() -> gtk::glib::ExitCode {
     // Initialize GResources
-    gio::resources_register_include!("aichat.gresource")
+    gio::resources_register_include!("gtksynapse.gresource")
         .expect("Failed to register GResources");
 
     let app = adw::Application::builder()
-        .application_id("io.github.daniel.aichat")
+        .application_id("io.github.daniel.gtksynapse")
         .flags(gio::ApplicationFlags::FLAGS_NONE)
         .build();
 
     app.connect_activate(|app| {
         // Load custom styles
         let provider = gtk::CssProvider::new();
-        provider.load_from_resource("/io/github/daniel/aichat/style.css");
+        provider.load_from_resource("/io/github/daniel/gtksynapse/style.css");
         if let Some(display) = gtk::gdk::Display::default() {
             gtk::style_context_add_provider_for_display(
                 &display,

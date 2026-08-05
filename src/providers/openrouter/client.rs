@@ -148,7 +148,7 @@ impl OpenRouterProvider {
         }
         // Identify the app to OpenRouter for usage analytics (optional but
         // recommended by their API docs).
-        if let Ok(v) = reqwest::header::HeaderValue::from_str("AIChat") {
+        if let Ok(v) = reqwest::header::HeaderValue::from_str("GtkSynapse") {
             headers.insert("X-Title", v);
         }
         if let Ok(v) = reqwest::header::HeaderValue::from_str("https://github.com/") {

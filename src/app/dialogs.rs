@@ -114,11 +114,9 @@ pub fn show_export_dialog(
 /// Show the application About dialog.
 pub fn show_about_dialog(parent: &adw::ApplicationWindow) {
     let dialog = adw::AboutDialog::new();
-    dialog.set_application_name("AIChat");
-    dialog.set_version(env!("CARGO_PKG_VERSION"));
-    dialog.set_comments("AI chat with local and cloud providers.");
-    dialog.set_developer_name("AIChat");
-    dialog.set_copyright("© AIChat");
+    dialog.set_application_name("GtkSynapse");
+    dialog.set_developer_name("GtkSynapse");
+    dialog.set_copyright("© GtkSynapse");
     dialog.set_license_type(gtk::License::MitX11);
     dialog.present(Some(parent));
 }

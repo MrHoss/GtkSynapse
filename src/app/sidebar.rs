@@ -41,7 +41,7 @@ impl SidebarPanel {
         let header = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         header.add_css_class("sidebar-header");
 
-        let title_label = gtk::Label::new(Some("AIChat"));
+        let title_label = gtk::Label::new(Some("GtkSynapse"));
         title_label.add_css_class("title");
         title_label.set_hexpand(true);
         title_label.set_xalign(0.0);

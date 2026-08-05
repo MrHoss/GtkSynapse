@@ -1,5 +1,5 @@
 [package]
-name = "aichat"
+name = "gtksynapse"
 version = "0.1.0"
 edition = "2021"
 authors = ["Daniel"]
@@ -8,7 +8,7 @@ license = "MIT"
 rust-version = "1.80"
 
 [[bin]]
-name = "aichat"
+name = "gtksynapse"
 path = "src/main.rs"
 
 [dependencies]

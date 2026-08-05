@@ -1,36 +1,36 @@
-/* AIChat — Native OS Stylesheet (Zero Outlines Override) */
+/* GtkSynapse — Native OS Stylesheet (Zero Outlines Override) */
 
 /* ============================================================
    Color Tokens
    ============================================================ */
-@define-color aichat-bg-primary @window_bg_color;
-@define-color aichat-bg-secondary @window_bg_color;
-@define-color aichat-bg-tertiary @view_bg_color;
-@define-color aichat-surface @card_bg_color;
-@define-color aichat-surface-hover alpha(@window_fg_color, 0.08);
-@define-color aichat-border @border_color;
+@define-color gtksynapse-bg-primary @window_bg_color;
+@define-color gtksynapse-bg-secondary @window_bg_color;
+@define-color gtksynapse-bg-tertiary @view_bg_color;
+@define-color gtksynapse-surface @card_bg_color;
+@define-color gtksynapse-surface-hover alpha(@window_fg_color, 0.08);
+@define-color gtksynapse-border @border_color;
 
-@define-color aichat-accent @accent_bg_color;
-@define-color aichat-accent-hover @accent_bg_color;
-@define-color aichat-accent-dim alpha(@accent_bg_color, 0.15);
-@define-color aichat-accent-glow alpha(@accent_bg_color, 0.25);
+@define-color gtksynapse-accent @accent_bg_color;
+@define-color gtksynapse-accent-hover @accent_bg_color;
+@define-color gtksynapse-accent-dim alpha(@accent_bg_color, 0.15);
+@define-color gtksynapse-accent-glow alpha(@accent_bg_color, 0.25);
 
-@define-color aichat-text-primary @window_fg_color;
-@define-color aichat-text-secondary alpha(@window_fg_color, 0.70);
-@define-color aichat-text-dim alpha(@window_fg_color, 0.45);
+@define-color gtksynapse-text-primary @window_fg_color;
+@define-color gtksynapse-text-secondary alpha(@window_fg_color, 0.70);
+@define-color gtksynapse-text-dim alpha(@window_fg_color, 0.45);
 
-@define-color aichat-user-bubble @accent_bg_color;
-@define-color aichat-user-bubble-border alpha(@accent_bg_color, 0.1);
-@define-color aichat-assistant-bubble @card_bg_color;
-@define-color aichat-assistant-bubble-border @border_color;
+@define-color gtksynapse-user-bubble @accent_bg_color;
+@define-color gtksynapse-user-bubble-border alpha(@accent_bg_color, 0.1);
+@define-color gtksynapse-assistant-bubble @card_bg_color;
+@define-color gtksynapse-assistant-bubble-border @border_color;
 
-@define-color aichat-success @success_color;
-@define-color aichat-warning @warning_color;
-@define-color aichat-error @error_color;
-@define-color aichat-info @accent_bg_color;
+@define-color gtksynapse-success @success_color;
+@define-color gtksynapse-warning @warning_color;
+@define-color gtksynapse-error @error_color;
+@define-color gtksynapse-info @accent_bg_color;
 
-@define-color aichat-code-bg alpha(@window_fg_color, 0.05);
-@define-color aichat-code-border @border_color;
+@define-color gtksynapse-code-bg alpha(@window_fg_color, 0.05);
+@define-color gtksynapse-code-border @border_color;
 
 /* ============================================================
    Structural layout resets (Honoring OS Native Panels)
@@ -88,13 +88,13 @@ window.main-window {
 }
 
 .conversation-row:hover {
-    background-color: @aichat-surface-hover;
+    background-color: @gtksynapse-surface-hover;
 }
 
 .conversation-row.selected,
 .conversation-row:selected {
-    background-color: @aichat-accent-dim;
-    color: @aichat-text-primary;
+    background-color: @gtksynapse-accent-dim;
+    color: @gtksynapse-text-primary;
 }
 
 .conversation-title {
@@ -104,11 +104,11 @@ window.main-window {
 
 .conversation-subtitle {
     font-size: 0.75rem;
-    color: @aichat-text-dim;
+    color: @gtksynapse-text-dim;
 }
 
 .conversation-favorite {
-    color: @aichat-warning;
+    color: @gtksynapse-warning;
 }
 
 /* Sidebar section headers */
@@ -117,7 +117,7 @@ window.main-window {
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    color: @aichat-text-dim;
+    color: @gtksynapse-text-dim;
 }
 
 /* Sidebar footer */
@@ -127,7 +127,7 @@ window.main-window {
 
 .sidebar-footer-button {
     border-radius: 6px;
-    color: @aichat-text-secondary;
+    color: @gtksynapse-text-secondary;
     background: transparent;
     border: none;
     padding: 6px;
@@ -135,7 +135,7 @@ window.main-window {
 }
 
 .sidebar-footer-button:hover {
-    background-color: @aichat-surface-hover;
+    background-color: @gtksynapse-surface-hover;
 }
 
 /* ============================================================
@@ -150,11 +150,11 @@ window.main-window {
 }
 
 .chat-header-model-badge {
-    background-color: @aichat-accent-dim;
+    background-color: @gtksynapse-accent-dim;
     border-radius: 12px;
     padding: 2px 8px;
     font-size: 0.75rem;
-    color: @aichat-accent;
+    color: @gtksynapse-accent;
 }
 
 .chat-message-row {
@@ -173,17 +173,17 @@ window.main-window {
 }
 
 .chat-bubble.user-bubble {
-    background-color: @aichat-user-bubble;
+    background-color: @gtksynapse-user-bubble;
     color: @accent_fg_color;
     border-bottom-right-radius: 4px;
     margin-left: auto;
 }
 
 .chat-bubble.assistant-bubble {
-    background-color: @aichat-assistant-bubble;
-    border: 1px solid @aichat-assistant-bubble-border;
+    background-color: @gtksynapse-assistant-bubble;
+    border: 1px solid @gtksynapse-assistant-bubble-border;
     border-bottom-left-radius: 4px;
-    color: @aichat-text-primary;
+    color: @gtksynapse-text-primary;
     margin-right: auto;
 }
 
@@ -200,19 +200,19 @@ window.main-window {
 }
 
 .bubble-avatar.user-avatar {
-    background-color: @aichat-accent;
+    background-color: @gtksynapse-accent;
     color: @accent_fg_color;
 }
 
 .bubble-avatar.assistant-avatar {
-    background-color: @aichat-surface;
-    color: @aichat-text-secondary;
-    border: 1px solid @aichat-border;
+    background-color: @gtksynapse-surface;
+    color: @gtksynapse-text-secondary;
+    border: 1px solid @gtksynapse-border;
 }
 
 .bubble-timestamp {
     font-size: 0.7rem;
-    color: @aichat-text-dim;
+    color: @gtksynapse-text-dim;
     margin-top: 4px;
 }
 
@@ -228,54 +228,54 @@ window.main-window {
 .bubble-action-button {
     border-radius: 6px;
     padding: 4px 6px;
-    background: @aichat-surface;
-    border: 1px solid @aichat-border;
-    color: @aichat-text-secondary;
+    background: @gtksynapse-surface;
+    border: 1px solid @gtksynapse-border;
+    color: @gtksynapse-text-secondary;
     font-size: 0.75rem;
 }
 
 /* Error bubble */
 .chat-error-bubble {
-    background-color: alpha(@aichat-error, 0.08);
-    border: 1px solid alpha(@aichat-error, 0.35);
+    background-color: alpha(@gtksynapse-error, 0.08);
+    border: 1px solid alpha(@gtksynapse-error, 0.35);
     border-bottom-left-radius: 4px;
-    color: @aichat-text-primary;
+    color: @gtksynapse-text-primary;
     margin-right: auto;
 }
 
 .chat-error-title {
     font-size: 0.85rem;
     font-weight: 600;
-    color: @aichat-error;
+    color: @gtksynapse-error;
 }
 
 .chat-error-icon {
-    color: @aichat-error;
+    color: @gtksynapse-error;
     font-size: 0.85rem;
 }
 
 .chat-error-text {
     font-size: 0.9rem;
-    color: @aichat-text-secondary;
+    color: @gtksynapse-text-secondary;
 }
 
 /* ============================================================
    Markdown & Code Formatting
    ============================================================ */
-.md-h1 { font-size: 1.3rem; font-weight: 700; margin: 10px 0 6px; color: @aichat-text-primary; }
-.md-h2 { font-size: 1.15rem; font-weight: 600; margin: 8px 0 4px; color: @aichat-text-primary; }
-.md-h3 { font-size: 1.05rem; font-weight: 600; margin: 6px 0 4px; color: @aichat-text-primary; }
+.md-h1 { font-size: 1.3rem; font-weight: 700; margin: 10px 0 6px; color: @gtksynapse-text-primary; }
+.md-h2 { font-size: 1.15rem; font-weight: 600; margin: 8px 0 4px; color: @gtksynapse-text-primary; }
+.md-h3 { font-size: 1.05rem; font-weight: 600; margin: 6px 0 4px; color: @gtksynapse-text-primary; }
 .md-blockquote {
-    border-left: 3px solid @aichat-accent;
+    border-left: 3px solid @gtksynapse-accent;
     padding-left: 10px;
     margin: 6px 0;
-    color: @aichat-text-secondary;
+    color: @gtksynapse-text-secondary;
     font-style: italic;
 }
 
 .code-block-container {
-    background-color: @aichat-code-bg;
-    border: 1px solid @aichat-code-border;
+    background-color: @gtksynapse-code-bg;
+    border: 1px solid @gtksynapse-code-border;
     border-radius: 8px;
     overflow: hidden;
     margin: 8px 0;
@@ -284,23 +284,23 @@ window.main-window {
 .code-block-header {
     background-color: alpha(@window_fg_color, 0.03);
     padding: 6px 12px;
-    border-bottom: 1px solid @aichat-code-border;
+    border-bottom: 1px solid @gtksynapse-code-border;
     font-size: 0.75rem;
-    color: @aichat-text-dim;
+    color: @gtksynapse-text-dim;
 }
 
 .code-block-copy-button {
     background: transparent;
-    border: 1px solid @aichat-border;
+    border: 1px solid @gtksynapse-border;
     border-radius: 4px;
     padding: 2px 8px;
     font-size: 0.7rem;
-    color: @aichat-text-dim;
+    color: @gtksynapse-text-dim;
 }
 
 .code-block-copy-button:hover {
-    border-color: @aichat-accent;
-    color: @aichat-accent;
+    border-color: @gtksynapse-accent;
+    color: @gtksynapse-accent;
 }
 
 .code-block-content {
@@ -321,7 +321,7 @@ window.main-window {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: @aichat-accent;
+    background-color: @gtksynapse-accent;
     margin: 0 2px;
     animation: typing-bounce 1.4s ease-in-out infinite;
 }
@@ -362,23 +362,23 @@ window.main-window {
    Attachments
    ============================================================ */
 .attachment-chip {
-    background: @aichat-surface;
-    border: 1px solid @aichat-border;
+    background: @gtksynapse-surface;
+    border: 1px solid @gtksynapse-border;
     border-radius: 6px;
     padding: 4px 8px;
 }
 
 .attachment-chip-name {
     font-size: 0.75rem;
-    color: @aichat-text-secondary;
+    color: @gtksynapse-text-secondary;
 }
 
 .attachment-chip-remove {
-    color: @aichat-text-dim;
+    color: @gtksynapse-text-dim;
     background: transparent;
     border: none;
 }
 
 .attachment-chip-remove:hover {
-    color: @aichat-error;
+    color: @gtksynapse-error;
 }

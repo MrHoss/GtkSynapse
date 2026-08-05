@@ -30,41 +30,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aichat"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-stream",
- "async-trait",
- "base64",
- "chrono",
- "dirs",
- "futures",
- "gdk-pixbuf",
- "gdk4",
- "gio",
- "glib",
- "glib-build-tools",
- "gtk4",
- "keyring",
- "libadwaita",
- "mime_guess",
- "once_cell",
- "parking_lot",
- "pulldown-cmark",
- "reqwest",
- "rusqlite",
- "serde",
- "serde_json",
- "syntect",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -786,6 +751,41 @@ dependencies = [
  "libc",
  "pango-sys",
  "system-deps",
+]
+
+[[package]]
+name = "gtksynapse"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-stream",
+ "async-trait",
+ "base64",
+ "chrono",
+ "dirs",
+ "futures",
+ "gdk-pixbuf",
+ "gdk4",
+ "gio",
+ "glib",
+ "glib-build-tools",
+ "gtk4",
+ "keyring",
+ "libadwaita",
+ "mime_guess",
+ "once_cell",
+ "parking_lot",
+ "pulldown-cmark",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "syntect",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

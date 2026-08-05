@@ -11,9 +11,8 @@ use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 pub fn render_markdown(text: &str) -> gtk::Box {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 4);
 
-    let options = Options::ENABLE_STRIKETHROUGH
-        | Options::ENABLE_TABLES
-        | Options::ENABLE_TASKLISTS;
+    let options =
+        Options::ENABLE_STRIKETHROUGH | Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS;
 
     let parser = Parser::new_ext(text, options);
 
@@ -98,7 +97,9 @@ pub fn render_markdown(text: &str) -> gtk::Box {
                 ordered_counter = start.unwrap_or(1) as u32;
             }
             Event::End(TagEnd::List(_)) => {
-                if list_depth > 0 { list_depth -= 1; }
+                if list_depth > 0 {
+                    list_depth -= 1;
+                }
             }
             Event::Start(Tag::Item) => {
                 current_para.push_str("• ");
@@ -165,7 +166,9 @@ pub fn render_markdown(text: &str) -> gtk::Box {
 /// Emit a GTK Label for accumulated paragraph text, if non-empty.
 fn flush_paragraph(container: &gtk::Box, text: &str) {
     let trimmed = text.trim();
-    if trimmed.is_empty() { return; }
+    if trimmed.is_empty() {
+        return;
+    }
 
     let label = gtk::Label::new(Some(trimmed));
     label.set_wrap(true);
