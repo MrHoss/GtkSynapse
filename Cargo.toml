@@ -1,0 +1,77 @@
+[package]
+name = "aichat"
+version = "0.1.0"
+edition = "2021"
+authors = ["Daniel"]
+description = "Universal AI Desktop Client for Linux"
+license = "MIT"
+rust-version = "1.80"
+
+[[bin]]
+name = "aichat"
+path = "src/main.rs"
+
+[dependencies]
+# GTK / UI
+gtk4 = { version = "0.9", features = ["v4_14"] }
+libadwaita = { version = "0.7", features = ["v1_6"] }
+glib = "0.20"
+gio = "0.20"
+gdk4 = "0.9"
+gdk-pixbuf = "0.20"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+async-trait = "0.1"
+async-stream = "0.3"
+
+# HTTP
+reqwest = { version = "0.12", features = ["json", "stream", "multipart"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+anyhow = "1"
+thiserror = "1"
+
+# Logging / tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Database
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+# Secure storage for API keys
+keyring = "3"
+
+# IDs and time
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Markdown rendering
+pulldown-cmark = "0.12"
+
+# Syntax highlighting
+syntect = { version = "5", default-features = false, features = ["default-syntaxes", "default-themes", "html", "regex-fancy"] }
+
+# Misc utils
+base64 = "0.22"
+mime_guess = "2"
+dirs = "5"
+once_cell = "1"
+parking_lot = "0.12"
+
+[build-dependencies]
+glib-build-tools = "0.20"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 1

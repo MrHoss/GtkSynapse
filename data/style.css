@@ -1,0 +1,384 @@
+/* AIChat — Native OS Stylesheet (Zero Outlines Override) */
+
+/* ============================================================
+   Color Tokens
+   ============================================================ */
+@define-color aichat-bg-primary @window_bg_color;
+@define-color aichat-bg-secondary @window_bg_color;
+@define-color aichat-bg-tertiary @view_bg_color;
+@define-color aichat-surface @card_bg_color;
+@define-color aichat-surface-hover alpha(@window_fg_color, 0.08);
+@define-color aichat-border @border_color;
+
+@define-color aichat-accent @accent_bg_color;
+@define-color aichat-accent-hover @accent_bg_color;
+@define-color aichat-accent-dim alpha(@accent_bg_color, 0.15);
+@define-color aichat-accent-glow alpha(@accent_bg_color, 0.25);
+
+@define-color aichat-text-primary @window_fg_color;
+@define-color aichat-text-secondary alpha(@window_fg_color, 0.70);
+@define-color aichat-text-dim alpha(@window_fg_color, 0.45);
+
+@define-color aichat-user-bubble @accent_bg_color;
+@define-color aichat-user-bubble-border alpha(@accent_bg_color, 0.1);
+@define-color aichat-assistant-bubble @card_bg_color;
+@define-color aichat-assistant-bubble-border @border_color;
+
+@define-color aichat-success @success_color;
+@define-color aichat-warning @warning_color;
+@define-color aichat-error @error_color;
+@define-color aichat-info @accent_bg_color;
+
+@define-color aichat-code-bg alpha(@window_fg_color, 0.05);
+@define-color aichat-code-border @border_color;
+
+/* ============================================================
+   Structural layout resets (Honoring OS Native Panels)
+   ============================================================ */
+window.main-window {
+    /* No custom background overrides to avoid mismatch with OS preferences */
+}
+
+.sidebar-panel {
+    /* Remove manual borders and colors, let NavigationSplitView draw natively */
+    min-width: 260px;
+}
+
+/* GtkListBox defaults to the light `view` background in libadwaita, which
+   makes the fixed actions and the chat list look like floating boxes that
+   clash with the sidebar. Blend both lists into the sidebar background. */
+.sidebar-panel list {
+    background-color: transparent;
+    color: inherit;
+}
+
+/* Remove the thin 1px border line libadwaita draws between the sidebar
+   and the content pane (`.sidebar-pane` inset box-shadow). Match the exact
+   selector the theme uses so the override actually applies. */
+.sidebar-pane:dir(ltr),
+.sidebar-pane:dir(rtl) {
+    box-shadow: none;
+}
+
+/* The embedded HeaderBar inherits libadwaita's `headerbar` rule, which
+   paints a bottom shade line plus 1px left/right borders (and uses -1px
+   side margins). Inside the content pane that shows up as dark "bordinhas"
+   on the top and left of the conversation screen, so remove them and let
+   the headerbar blend into the content area. */
+.content-pane headerbar {
+    margin-left: 0;
+    margin-right: 0;
+    box-shadow: none;
+}
+
+.sidebar-panel .sidebar-header {
+    padding: 12px 16px;
+}
+
+.sidebar-search {
+    margin: 8px 12px;
+}
+
+/* Conversation list items */
+.conversation-row {
+    border-radius: 6px;
+    margin: 2px 8px;
+    padding: 8px 10px;
+    transition: background-color 100ms ease;
+}
+
+.conversation-row:hover {
+    background-color: @aichat-surface-hover;
+}
+
+.conversation-row.selected,
+.conversation-row:selected {
+    background-color: @aichat-accent-dim;
+    color: @aichat-text-primary;
+}
+
+.conversation-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.conversation-subtitle {
+    font-size: 0.75rem;
+    color: @aichat-text-dim;
+}
+
+.conversation-favorite {
+    color: @aichat-warning;
+}
+
+/* Sidebar section headers */
+.sidebar-section-header {
+    padding: 4px 16px 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: @aichat-text-dim;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+    padding: 8px 12px;
+}
+
+.sidebar-footer-button {
+    border-radius: 6px;
+    color: @aichat-text-secondary;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    transition: background-color 100ms ease;
+}
+
+.sidebar-footer-button:hover {
+    background-color: @aichat-surface-hover;
+}
+
+/* ============================================================
+   Chat Messages
+   ============================================================ */
+.chat-view {
+    /* Pure native background color */
+}
+
+.chat-header {
+    padding: 10px 20px;
+}
+
+.chat-header-model-badge {
+    background-color: @aichat-accent-dim;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    color: @aichat-accent;
+}
+
+.chat-message-row {
+    padding: 8px 24px;
+}
+
+/* ============================================================
+   Chat Bubbles
+   ============================================================ */
+.chat-bubble {
+    border-radius: 14px;
+    padding: 10px 14px;
+    max-width: 740px;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.chat-bubble.user-bubble {
+    background-color: @aichat-user-bubble;
+    color: @accent_fg_color;
+    border-bottom-right-radius: 4px;
+    margin-left: auto;
+}
+
+.chat-bubble.assistant-bubble {
+    background-color: @aichat-assistant-bubble;
+    border: 1px solid @aichat-assistant-bubble-border;
+    border-bottom-left-radius: 4px;
+    color: @aichat-text-primary;
+    margin-right: auto;
+}
+
+.bubble-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+}
+
+.bubble-avatar.user-avatar {
+    background-color: @aichat-accent;
+    color: @accent_fg_color;
+}
+
+.bubble-avatar.assistant-avatar {
+    background-color: @aichat-surface;
+    color: @aichat-text-secondary;
+    border: 1px solid @aichat-border;
+}
+
+.bubble-timestamp {
+    font-size: 0.7rem;
+    color: @aichat-text-dim;
+    margin-top: 4px;
+}
+
+.bubble-actions {
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.chat-message-row:hover .bubble-actions {
+    opacity: 1;
+}
+
+.bubble-action-button {
+    border-radius: 6px;
+    padding: 4px 6px;
+    background: @aichat-surface;
+    border: 1px solid @aichat-border;
+    color: @aichat-text-secondary;
+    font-size: 0.75rem;
+}
+
+/* Error bubble */
+.chat-error-bubble {
+    background-color: alpha(@aichat-error, 0.08);
+    border: 1px solid alpha(@aichat-error, 0.35);
+    border-bottom-left-radius: 4px;
+    color: @aichat-text-primary;
+    margin-right: auto;
+}
+
+.chat-error-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: @aichat-error;
+}
+
+.chat-error-icon {
+    color: @aichat-error;
+    font-size: 0.85rem;
+}
+
+.chat-error-text {
+    font-size: 0.9rem;
+    color: @aichat-text-secondary;
+}
+
+/* ============================================================
+   Markdown & Code Formatting
+   ============================================================ */
+.md-h1 { font-size: 1.3rem; font-weight: 700; margin: 10px 0 6px; color: @aichat-text-primary; }
+.md-h2 { font-size: 1.15rem; font-weight: 600; margin: 8px 0 4px; color: @aichat-text-primary; }
+.md-h3 { font-size: 1.05rem; font-weight: 600; margin: 6px 0 4px; color: @aichat-text-primary; }
+.md-blockquote {
+    border-left: 3px solid @aichat-accent;
+    padding-left: 10px;
+    margin: 6px 0;
+    color: @aichat-text-secondary;
+    font-style: italic;
+}
+
+.code-block-container {
+    background-color: @aichat-code-bg;
+    border: 1px solid @aichat-code-border;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.code-block-header {
+    background-color: alpha(@window_fg_color, 0.03);
+    padding: 6px 12px;
+    border-bottom: 1px solid @aichat-code-border;
+    font-size: 0.75rem;
+    color: @aichat-text-dim;
+}
+
+.code-block-copy-button {
+    background: transparent;
+    border: 1px solid @aichat-border;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    color: @aichat-text-dim;
+}
+
+.code-block-copy-button:hover {
+    border-color: @aichat-accent;
+    color: @aichat-accent;
+}
+
+.code-block-content {
+    font-family: monospace;
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    white-space: pre-wrap;
+}
+
+/* ============================================================
+   Typing Indicator
+   ============================================================ */
+.typing-indicator {
+    padding: 10px 24px;
+}
+
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: @aichat-accent;
+    margin: 0 2px;
+    animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ============================================================
+   Input Bar Area
+   ============================================================
+   The input surface is the built-in Adwaita "card" style class, so it
+   follows the OS theme (surface color, border, radius). Only padding and
+   the text-view transparency are customized here, using semantic theme
+   colors so light/dark mode keeps working.
+   ============================================================ */
+.input-bar-inner {
+    padding: 6px;
+}
+
+.input-text-view {
+    background: transparent;
+    border: none;
+    color: @window_fg_color;
+    caret-color: @accent_bg_color;
+}
+
+.input-text-view text {
+    background: transparent;
+}
+
+/* ============================================================
+   Attachments
+   ============================================================ */
+.attachment-chip {
+    background: @aichat-surface;
+    border: 1px solid @aichat-border;
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+
+.attachment-chip-name {
+    font-size: 0.75rem;
+    color: @aichat-text-secondary;
+}
+
+.attachment-chip-remove {
+    color: @aichat-text-dim;
+    background: transparent;
+    border: none;
+}
+
+.attachment-chip-remove:hover {
+    color: @aichat-error;
+}

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=AIChat
+Comment=Universal AI Desktop Client
+GenericName=AI Chat Client
+Exec=aichat %u
+Icon=io.github.daniel.aichat
+Terminal=false
+Type=Application
+Categories=Network;Chat;Utility;
+Keywords=AI;Chat;LLM;Ollama;Gemini;Groq;
+StartupWMClass=aichat
+MimeType=x-scheme-handler/aichat;
