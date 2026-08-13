@@ -96,7 +96,6 @@ pub fn curated_models() -> Vec<ModelInfo> {
     vec![
         mk("llama3.1:8b", "Meta Llama 3.1 8B", 8192),
         mk("llama3.2:3b", "Meta Llama 3.2 3B", 8192),
-        mk("llama3.2:1b", "Meta Llama 3.2 1B", 8192),
         mk("qwen2.5:7b", "Qwen 2.5 7B", 8192),
         mk("qwen2.5:3b", "Qwen 2.5 3B", 8192),
         mk("mistral:7b", "Mistral 7B", 8192),

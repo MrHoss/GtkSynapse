@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use crate::core::models::{GeneratedMedia, VideoProgress, VideoStatus};
+use crate::core::models::{Attachment, GeneratedMedia, VideoProgress, VideoStatus};
 use crate::providers::pixverse::models::{clamp_duration, model_duration_range};
 use crate::widgets::video_view::{make_video_progress_card, VideoProgressWidgets};
 
@@ -37,8 +37,6 @@ pub struct MediaView {
     aspect_ratio: gtk::DropDown,
     estimate_label: gtk::Label,
     attach_btn: gtk::Button,
-    attach_label: gtk::Label,
-    clear_btn: gtk::Button,
     image_path: Arc<Mutex<Option<PathBuf>>>,
     audio_options: gtk::Box,
     generate_btn: gtk::Button,
@@ -58,6 +56,8 @@ pub struct MediaView {
     on_generate: Arc<Mutex<Option<Box<dyn Fn(GenerateRequest) + 'static>>>>,
     on_settings: Arc<Mutex<Option<Box<dyn Fn() + 'static>>>>,
     on_about: Arc<Mutex<Option<Box<dyn Fn() + 'static>>>>,
+    /// Reference image preview box (in video_options) showing thumbnail or placeholder.
+    reference_preview: gtk::Box,
 }
 
 impl MediaView {
@@ -170,6 +170,11 @@ impl MediaView {
         input_area.set_margin_start(20);
         input_area.set_margin_end(20);
 
+        // Reference image preview (hidden by default, shown when an image is selected)
+        let reference_preview = gtk::Box::new(gtk::Orientation::Vertical, 6);
+        reference_preview.set_visible(false);
+        input_area.append(&reference_preview);
+
         let card = gtk::Box::new(gtk::Orientation::Vertical, 0);
         card.add_css_class("card");
         card.add_css_class("input-bar-inner");
@@ -239,18 +244,15 @@ impl MediaView {
         attach_btn.set_tooltip_text(Some("Attach reference image"));
         video_options.append(&attach_btn);
 
-        let attach_label = gtk::Label::new(Some("No image"));
-        attach_label.add_css_class("dim-label");
-        attach_label.set_ellipsize(pango::EllipsizeMode::End);
-        attach_label.set_max_width_chars(14);
-        video_options.append(&attach_label);
-
-        let clear_btn = gtk::Button::new();
-        clear_btn.set_icon_name("edit-clear-symbolic");
-        clear_btn.add_css_class("flat");
-        clear_btn.set_tooltip_text(Some("Clear reference image"));
-        clear_btn.set_visible(false);
-        video_options.append(&clear_btn);
+        // Reference image preview area (shows thumbnail or placeholder)
+        let reference_preview = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        reference_preview.set_halign(gtk::Align::Start);
+        let initial_label = gtk::Label::new(Some("No image"));
+        initial_label.add_css_class("dim-label");
+        initial_label.set_ellipsize(pango::EllipsizeMode::End);
+        initial_label.set_max_width_chars(14);
+        reference_preview.append(&initial_label);
+        video_options.append(&reference_preview);
 
         footer.append(&video_options);
 
@@ -303,7 +305,7 @@ impl MediaView {
         let on_generate: Arc<Mutex<Option<Box<dyn Fn(GenerateRequest) + 'static>>>> =
             Arc::new(Mutex::new(None));
 
-        let media = Self {
+let media = Self {
             container,
             title_label,
             provider_selector,
@@ -318,8 +320,6 @@ impl MediaView {
             aspect_ratio,
             estimate_label,
             attach_btn,
-            attach_label,
-            clear_btn,
             image_path: Arc::new(Mutex::new(None)),
             audio_options,
             generate_btn,
@@ -339,16 +339,17 @@ impl MediaView {
             on_generate,
             on_settings,
             on_about,
+            /// Reference image preview box (in video_options) showing thumbnail or placeholder.
+            reference_preview,
         };
 
         media.setup_static_signals();
         media
     }
 
-    fn setup_static_signals(&self) {
-        let attach_label = self.attach_label.clone();
-        let clear_btn = self.clear_btn.clone();
+fn setup_static_signals(&self) {
         let image_path = self.image_path.clone();
+        let reference_preview = self.reference_preview.clone();
         let container_root = self.container.clone();
 
         self.attach_btn.connect_clicked(move |_| {
@@ -361,29 +362,49 @@ impl MediaView {
 
             if let Some(root) = container_root.root() {
                 if let Ok(win) = root.downcast::<gtk::Window>() {
-                    let attach_label = attach_label.clone();
-                    let clear_btn = clear_btn.clone();
-                    let image_path = image_path.clone();
+                    let img_path = image_path.clone();
+                    let ref_preview = reference_preview.clone();
                     dialog.open(Some(&win), gtk::gio::Cancellable::NONE, move |res| {
                         if let Ok(file) = res {
                             if let Some(path) = file.path() {
-                                attach_label.set_label(&path.to_string_lossy());
-                                clear_btn.set_visible(true);
-                                *image_path.lock().unwrap() = Some(path);
+                                if let Ok(att) = Attachment::from_path(path.clone()) {
+                                    *img_path.lock().unwrap() = Some(path);
+                                    // Show preview
+                                    let (preview_widget, remove_btn) =
+                                        crate::widgets::attachment_chip::make_attachment_preview(&att);
+                                    // Make the preview widget more compact for the footer
+                                    preview_widget.set_hexpand(false);
+                                    preview_widget.set_halign(gtk::Align::Start);
+                                    // Clear previous content
+                                    while let Some(child) = ref_preview.first_child() {
+                                        ref_preview.remove(&child);
+                                    }
+                                    // Add the preview widget with some styling to make it compact
+                                    let preview_container = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+                                    preview_container.set_halign(gtk::Align::Start);
+                                    preview_container.append(&preview_widget);
+                                    ref_preview.append(&preview_container);
+                                    // Wire remove button to clear the image
+                                    let img_path_clone = img_path.clone();
+                                    let ref_preview_clone = ref_preview.clone();
+                                    remove_btn.connect_clicked(move |_| {
+                                        *img_path_clone.lock().unwrap() = None;
+                                        // Reset to "No image" label
+                                        while let Some(child) = ref_preview.first_child() {
+                                            ref_preview.remove(&child);
+                                        }
+                                        let label = gtk::Label::new(Some("No image"));
+                                        label.add_css_class("dim-label");
+                                        label.set_ellipsize(pango::EllipsizeMode::End);
+                                        label.set_max_width_chars(14);
+                                        ref_preview.append(&label);
+                                    });
+                                }
                             }
                         }
                     });
                 }
             }
-        });
-
-        let image_path = self.image_path.clone();
-        let attach_label = self.attach_label.clone();
-        let clear_btn = self.clear_btn.clone();
-        self.clear_btn.connect_clicked(move |_| {
-            *image_path.lock().unwrap() = None;
-            attach_label.set_label("No image");
-            clear_btn.set_visible(false);
         });
     }
 

@@ -56,7 +56,9 @@ impl HistoryManager {
             "_Provider: {} | Model: {} | Created: {}_\n\n---\n\n",
             conv.provider_id,
             conv.model_id,
-            conv.created_at.format("%Y-%m-%d %H:%M UTC"),
+            conv.created_at
+                .with_timezone(&chrono::Local)
+                .format("%Y-%m-%d %H:%M"),
         ));
 
         for msg in messages {

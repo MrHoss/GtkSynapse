@@ -2,7 +2,7 @@
 //! provider/model selectors, capability indicator, and send/cancel buttons.
 
 use gtk4::prelude::*;
-use gtk4::{self as gtk, glib};
+use gtk4::{self as gtk, gdk, glib};
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use std::path::PathBuf;
@@ -30,6 +30,10 @@ pub struct InputBar {
     /// Set while the widget selects are being updated programmatically, so
     /// window handlers can tell user-driven changes apart from syncing.
     syncing: Arc<Mutex<bool>>,
+    /// Rebuilds the attachment previews. Armed with a clone of the input
+    /// bar's Arc so add/remove callbacks can refresh the UI without holding
+    /// a borrow of `self` at signal time.
+    refresh_chips: Arc<Mutex<Option<Box<dyn Fn() + 'static>>>>,
     on_send_message: Option<Box<dyn Fn(String, Vec<Attachment>, ModelInfo) -> bool + 'static>>,
     on_cancel: Option<Box<dyn Fn() + 'static>>,
 }
@@ -145,6 +149,8 @@ impl InputBar {
 
         let attachments = Arc::new(Mutex::new(Vec::new()));
         let syncing = Arc::new(Mutex::new(false));
+        let refresh_chips: Arc<Mutex<Option<Box<dyn Fn() + 'static>>>> =
+            Arc::new(Mutex::new(None));
 
         let mut input_bar = Self {
             container,
@@ -161,11 +167,11 @@ impl InputBar {
             available_providers: Vec::new(),
             available_models: Vec::new(),
             syncing,
+            refresh_chips,
             on_send_message: None,
             on_cancel: None,
         };
 
-        input_bar.setup_key_handlers();
         input_bar
     }
 
@@ -311,15 +317,41 @@ impl InputBar {
         self.cancel_btn.set_visible(is_streaming);
     }
 
-    fn setup_key_handlers(&self) {
-        // Implement Enter to send, Shift+Enter to new line.
-        let text_view = self.text_view.clone();
-        let buffer = text_view.buffer();
-
-        // Connect events
-    }
-
     pub fn connect_events(&self, input_bar_arc: Arc<Mutex<Self>>) {
+        // Enter sends the message; Shift+Enter inserts a new line. The event
+        // controller runs in the capture phase (default for
+        // `EventControllerKey`), so it sees the key before the text view
+        // inserts a newline.
+        let controller = gtk::EventControllerKey::new();
+        let send_arc = input_bar_arc.clone();
+        controller.connect_key_pressed(move |_, key, _keycode, mods| {
+            let is_enter = key == gdk::Key::Return
+                || key == gdk::Key::KP_Enter
+                || key == gdk::Key::ISO_Enter;
+            if !is_enter {
+                return glib::Propagation::Proceed;
+            }
+            // Let the default handler insert a newline for Shift+Enter.
+            if mods.contains(gdk::ModifierType::SHIFT_MASK) {
+                return glib::Propagation::Proceed;
+            }
+            let ib = send_arc.lock().unwrap();
+            // While a response is streaming the send button is hidden; fall
+            // back to the default newline behaviour in that state.
+            if !ib.send_btn.is_visible() {
+                return glib::Propagation::Proceed;
+            }
+            ib.trigger_send();
+            glib::Propagation::Stop
+        });
+        self.text_view.add_controller(controller);
+
+        // Arm the refresh callback so add/remove can rebuild previews.
+        let ib_refresh = input_bar_arc.clone();
+        *self.refresh_chips.lock().unwrap() = Some(Box::new(move || {
+            ib_refresh.lock().unwrap().refresh_attachment_chips();
+        }));
+
         let input_bar_clone = input_bar_arc.clone();
         self.send_btn.connect_clicked(move |_| {
             let ib = input_bar_clone.lock().unwrap();
@@ -335,9 +367,10 @@ impl InputBar {
         });
 
         let input_bar_clone = input_bar_arc.clone();
+        let refresh_chips = self.refresh_chips.clone();
         self.attach_btn.connect_clicked(move |_| {
             let ib = input_bar_clone.lock().unwrap();
-            ib.open_file_chooser();
+            ib.open_file_chooser(refresh_chips.clone());
         });
 
         // Refresh the capability badge when the user picks another model.
@@ -386,7 +419,7 @@ impl InputBar {
         }
     }
 
-    fn open_file_chooser(&self) {
+    fn open_file_chooser(&self, refresh_chips: Arc<Mutex<Option<Box<dyn Fn() + 'static>>>>) {
         let dialog = gtk::FileDialog::new();
         dialog.set_title("Choose File Attachment");
 
@@ -398,13 +431,16 @@ impl InputBar {
             if let Ok(win) = root.downcast::<gtk::Window>() {
                 let attachments_cb = attachments_clone.clone();
                 let ib_container = container_clone.clone();
+                let refresh = refresh_chips.clone();
                 dialog.open(Some(&win), gtk::gio::Cancellable::NONE, move |result| {
                     if let Ok(file) = result {
                         if let Some(path) = file.path() {
                             if let Ok(att) = Attachment::from_path(path) {
                                 attachments_cb.lock().unwrap().push(att);
-                                // Trigger UI update inside a local context or notify handler
-                                let _ = &ib_container;
+                                // Trigger UI refresh
+                                if let Some(ref cb) = *refresh.lock().unwrap() {
+                                    cb();
+                                }
                             }
                         }
                     }
@@ -434,19 +470,27 @@ impl InputBar {
 
         self.attachments_box.parent().unwrap().set_visible(true);
 
-        for (idx, att) in atts.iter().enumerate() {
-            let (chip_box, remove_btn) = attachment_chip::make_attachment_chip(att);
+        let refresh_chips = self.refresh_chips.clone();
+        let attachments_clone = self.attachments.clone();
 
-            let attachments_clone = self.attachments.clone();
-            let parent_input_bar = self.attachments_box.clone();
+        for (idx, att) in atts.iter().enumerate() {
+            let (chip_box, remove_btn) =
+                crate::widgets::attachment_chip::make_attachment_preview(att);
+
+            let refresh_chips_cb = refresh_chips.clone();
+            let attachments_cb = attachments_clone.clone();
+            let parent_box = self.attachments_box.clone();
 
             remove_btn.connect_clicked(move |_| {
-                let mut guard = attachments_clone.lock().unwrap();
+                let mut guard = attachments_cb.lock().unwrap();
                 if idx < guard.len() {
                     guard.remove(idx);
                 }
-                // Redraw
-                let _ = &parent_input_bar;
+                // Trigger redraw
+                if let Some(ref cb) = *refresh_chips_cb.lock().unwrap() {
+                    cb();
+                }
+                let _ = &parent_box;
             });
             self.attachments_box.append(&chip_box);
         }

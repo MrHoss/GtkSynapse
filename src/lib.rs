@@ -5,6 +5,7 @@ pub mod providers;
 pub mod storage;
 pub mod widgets;
 pub mod app;
+pub mod ollama;
 
 use std::sync::Arc;
 use libadwaita as adw;

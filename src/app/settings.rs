@@ -4,9 +4,12 @@ use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita::prelude::*;
 use libadwaita as adw;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
+use crate::app::downloads::DownloadsIndicator;
+use crate::app::input_bar::InputBar;
+use crate::app::ollama_dialog;
 use crate::providers::manager::ProviderManager;
 use crate::providers::ProviderRegistry;
 use crate::storage::StorageManager;
@@ -14,9 +17,12 @@ use crate::storage::StorageManager;
 /// Show the settings preferences dialog.
 pub fn show_settings_dialog(
     parent: &adw::ApplicationWindow,
-    storage: Arc<StorageManager>,
+    overlay: &adw::ToastOverlay,
+    _storage: Arc<StorageManager>,
     manager: Arc<ProviderManager>,
+    input_bar: Arc<Mutex<InputBar>>,
     runtime: tokio::runtime::Handle,
+    downloads: DownloadsIndicator,
 ) {
     let dialog = adw::PreferencesDialog::new();
     dialog.set_title("Settings");
@@ -114,6 +120,35 @@ pub fn show_settings_dialog(
     ollama_test_row.add_suffix(&ollama_status);
     ollama_test_row.add_suffix(&ollama_test_btn);
     ollama_group.add(&ollama_test_row);
+
+    // One-click access to the local model manager (install, start server,
+    // download models).
+    let manage_row = adw::ActionRow::new();
+    manage_row.set_title("Manage Local Models");
+    manage_row.set_subtitle("Install Ollama, start/stop the server, download models");
+    let manage_btn = gtk::Button::with_label("Open");
+    manage_btn.set_valign(gtk::Align::Center);
+    manage_btn.add_css_class("suggested-action");
+    manage_row.add_suffix(&manage_btn);
+    {
+        let parent = parent.clone();
+        let overlay = overlay.clone();
+        let manager = manager.clone();
+        let input_bar = input_bar.clone();
+        let runtime = runtime.clone();
+        let downloads = downloads.clone();
+        manage_btn.connect_clicked(move |_| {
+            ollama_dialog::show_ollama_manager(
+                &parent,
+                &overlay,
+                manager.clone(),
+                input_bar.clone(),
+                runtime.clone(),
+                downloads.clone(),
+            );
+        });
+    }
+    ollama_group.add(&manage_row);
 
     {
         let status_label = ollama_status.clone();

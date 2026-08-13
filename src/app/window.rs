@@ -12,9 +12,11 @@ use futures::StreamExt;
 
 use crate::app::chat::ChatView;
 use crate::app::dialogs;
+use crate::app::downloads::DownloadsIndicator;
 use crate::app::generate::{friendly_error, GenKind, ProviderCap};
 use crate::app::input_bar::InputBar;
 use crate::app::media_view::MediaView;
+use crate::app::ollama_dialog;
 use crate::app::settings;
 use crate::app::sidebar::{ChatAction, SidebarPanel};
 use crate::core::chat::{ChatEvent, ChatSession};
@@ -22,6 +24,7 @@ use crate::core::models::{
     Conversation, ConversationKind, GeneratedMedia, ImageGenOptions, Message, MessageRole,
     ModelInfo, VideoProgress, VideoRequest, VideoStatus,
 };
+use crate::ollama;
 use crate::providers::manager::ProviderManager;
 use crate::providers::curated_models;
 use crate::storage::StorageManager;
@@ -117,7 +120,7 @@ fn set_input_provider(input_bar: &Arc<Mutex<InputBar>>, id: &str) {
 /// empty. `desired_model`, when given, is re-selected after the list loads
 /// (used when opening a conversation whose model may not be the first entry).
 /// Stale results are discarded if the user switched providers meanwhile.
-fn load_models_for_provider(
+pub(crate) fn load_models_for_provider(
     input_bar: &Arc<Mutex<InputBar>>,
     manager: &Arc<ProviderManager>,
     runtime: &tokio::runtime::Handle,
@@ -229,12 +232,14 @@ pub struct MainWindow {
     input_bar: Arc<Mutex<InputBar>>,
     media_view: Arc<Mutex<MediaView>>,
     content_stack: gtk::Stack,
+    toast_overlay: adw::ToastOverlay,
     storage: Arc<StorageManager>,
     manager: Arc<ProviderManager>,
     current_session: Arc<Mutex<Option<ChatSession>>>,
     current_media_session: Arc<Mutex<Option<(Conversation, GenKind)>>>,
     runtime: tokio::runtime::Handle,
     cancel_handle: Arc<Mutex<Option<tokio::sync::oneshot::Sender<()>>>>,
+    downloads: DownloadsIndicator,
 }
 
 impl MainWindow {
@@ -264,6 +269,8 @@ impl MainWindow {
         let header_bar = adw::HeaderBar::new();
         let (menu_btn, chat_menu_settings, chat_menu_about) =
             crate::app::media_view::build_header_menu();
+        let downloads = DownloadsIndicator::new(runtime.clone());
+        header_bar.pack_end(&downloads.header_button());
         header_bar.pack_end(&menu_btn);
         content_box.append(&header_bar);
 
@@ -292,7 +299,10 @@ impl MainWindow {
         let content_page = adw::NavigationPage::new(&content_stack, "Content");
         split_view.set_content(Some(&content_page));
 
-        window.set_content(Some(&split_view));
+        // Toast overlay wraps the whole UI (used for Ollama status messages).
+        let toast_overlay = adw::ToastOverlay::new();
+        toast_overlay.set_child(Some(&split_view));
+        window.set_content(Some(&toast_overlay));
 
         let current_session = Arc::new(Mutex::new(None));
         let current_media_session = Arc::new(Mutex::new(None));
@@ -305,17 +315,20 @@ impl MainWindow {
             input_bar,
             media_view,
             content_stack,
+            toast_overlay,
             storage,
             manager,
             current_session,
             current_media_session,
             runtime,
             cancel_handle,
+            downloads,
         };
 
         main_window.setup_callbacks(chat_menu_settings, chat_menu_about);
         main_window.setup_models();
         main_window.setup_media_view();
+        main_window.setup_ollama();
 
         main_window
     }
@@ -338,6 +351,8 @@ impl MainWindow {
         let input_bar_status = self.input_bar.clone();
         let media_view_arc = self.media_view.clone();
         let content_stack_clone = self.content_stack.clone();
+        let overlay_clone = self.toast_overlay.clone();
+        let downloads_clone = self.downloads.clone();
 
         // New Chat Callback: only show a fresh empty chat screen. A
         // conversation is actually created on the first message sent.
@@ -526,22 +541,44 @@ impl MainWindow {
         // Settings open callback
         self.sidebar.lock().unwrap().set_on_open_settings({
             let win = window_clone.clone();
+            let overlay = overlay_clone.clone();
             let manager = manager_clone.clone();
             let store = storage_clone.clone();
+            let input_bar = input_bar_arc.clone();
             let rt = self.runtime.clone();
+            let downloads = downloads_clone.clone();
             move || {
-                settings::show_settings_dialog(&win, store.clone(), manager.clone(), rt.clone());
+                settings::show_settings_dialog(
+                    &win,
+                    &overlay,
+                    store.clone(),
+                    manager.clone(),
+                    input_bar.clone(),
+                    rt.clone(),
+                    downloads.clone(),
+                );
             }
         });
 
         // Three-dot header menu callbacks (chat page).
         *chat_menu_settings.lock().unwrap() = Some(Box::new({
             let win = window_clone.clone();
+            let overlay = overlay_clone.clone();
             let manager = manager_clone.clone();
             let store = storage_clone.clone();
+            let input_bar = input_bar_arc.clone();
             let rt = runtime_handle.clone();
+            let downloads = downloads_clone.clone();
             move || {
-                settings::show_settings_dialog(&win, store.clone(), manager.clone(), rt.clone());
+                settings::show_settings_dialog(
+                    &win,
+                    &overlay,
+                    store.clone(),
+                    manager.clone(),
+                    input_bar.clone(),
+                    rt.clone(),
+                    downloads.clone(),
+                );
             }
         }));
         *chat_menu_about.lock().unwrap() = Some(Box::new({
@@ -556,11 +593,22 @@ impl MainWindow {
             let mut mv = self.media_view.lock().unwrap();
             mv.set_on_settings({
                 let win = window_clone.clone();
+                let overlay = overlay_clone.clone();
                 let manager = manager_clone.clone();
                 let store = storage_clone.clone();
+                let input_bar = input_bar_arc.clone();
                 let rt = runtime_handle.clone();
+                let downloads = downloads_clone.clone();
                 move || {
-                    settings::show_settings_dialog(&win, store.clone(), manager.clone(), rt.clone());
+                    settings::show_settings_dialog(
+                        &win,
+                        &overlay,
+                        store.clone(),
+                        manager.clone(),
+                        input_bar.clone(),
+                        rt.clone(),
+                        downloads.clone(),
+                    );
                 }
             });
             mv.set_on_about({
@@ -1143,6 +1191,84 @@ impl MainWindow {
         stack.connect_visible_child_name_notify(move |_| {
             if stack_for_cb.visible_child_name().as_deref() == Some("media") {
                 refresh();
+            }
+        });
+    }
+
+    /// Automated Ollama bootstrap, run once when the app opens:
+    ///
+    /// 1. Asks the user to install Ollama if it is missing.
+    /// 2. Otherwise starts the local server automatically (if not running).
+    fn setup_ollama(&self) {
+        let window = self.window.clone();
+        let overlay = self.toast_overlay.clone();
+        let manager = self.manager.clone();
+        let input_bar = self.input_bar.clone();
+        let runtime = self.runtime.clone();
+
+        let (tx, mut rx) = mpsc::channel::<ollama::OllamaStatus>(1);
+        let rt = runtime.clone();
+        rt.spawn(async move {
+            let _ = tx.send(ollama::status().await).await;
+        });
+
+        glib::timeout_add_local(std::time::Duration::from_millis(15), move || {
+            match rx.try_recv() {
+                Ok(st) => {
+                    if !st.installed {
+                        ollama_dialog::prompt_install_ollama(
+                            &window,
+                            manager.clone(),
+                            input_bar.clone(),
+                            &overlay,
+                            runtime.clone(),
+                        );
+                    } else if !st.server_running {
+                        overlay.add_toast(adw::Toast::new("Starting local Ollama server…"));
+                        let overlay = overlay.clone();
+                        let manager = manager.clone();
+                        let input_bar = input_bar.clone();
+                        let runtime = runtime.clone();
+                        let (tx2, mut rx2) = mpsc::channel::<Result<bool, String>>(1);
+                        runtime.clone().spawn(async move {
+                            let _ = tx2
+                                .send(ollama::ensure_server_running().await.map_err(|e| e.to_string()))
+                                .await;
+                        });
+                        glib::timeout_add_local(std::time::Duration::from_millis(15), move || {
+                            match rx2.try_recv() {
+                                Ok(Ok(_)) => {
+                                    overlay.add_toast(adw::Toast::new(
+                                        "Local Ollama server is running",
+                                    ));
+                                    load_models_for_provider(
+                                        &input_bar,
+                                        &manager,
+                                        &runtime,
+                                        None,
+                                    );
+                                    glib::ControlFlow::Break
+                                }
+                                Ok(Err(e)) => {
+                                    overlay.add_toast(adw::Toast::new(&format!(
+                                        "Could not start the Ollama server: {}",
+                                        e
+                                    )));
+                                    glib::ControlFlow::Break
+                                }
+                                Err(mpsc::error::TryRecvError::Empty) => {
+                                    glib::ControlFlow::Continue
+                                }
+                                Err(mpsc::error::TryRecvError::Disconnected) => {
+                                    glib::ControlFlow::Break
+                                }
+                            }
+                        });
+                    }
+                    glib::ControlFlow::Break
+                }
+                Err(mpsc::error::TryRecvError::Empty) => glib::ControlFlow::Continue,
+                Err(mpsc::error::TryRecvError::Disconnected) => glib::ControlFlow::Break,
             }
         });
     }

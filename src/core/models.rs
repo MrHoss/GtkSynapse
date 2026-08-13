@@ -450,7 +450,7 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             default_provider_id: "ollama".to_string(),
-            default_model_id: "llama3.1:8b".to_string(),
+            default_model_id: "llama3.2:3b".to_string(),
             theme: ThemePreference::System,
             language: "en".to_string(),
             max_context_messages: 20,
