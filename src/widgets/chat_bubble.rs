@@ -35,7 +35,7 @@ pub fn make_chat_bubble(message: &Message) -> gtk::Box {
     }
 
     // Avatar
-    let avatar = make_avatar(is_user, &message.role);
+    let avatar = make_avatar(is_user);
     if !is_user {
         row.append(&avatar);
     }
@@ -98,7 +98,14 @@ pub fn make_chat_bubble(message: &Message) -> gtk::Box {
         gtk::Align::Start
     });
 
-    let ts = gtk::Label::new(Some(&message.created_at.format("%H:%M").to_string()));
+    // `created_at` is stored in UTC; convert to local time for display.
+    let ts = gtk::Label::new(Some(
+        &message
+            .created_at
+            .with_timezone(&chrono::Local)
+            .format("%H:%M")
+            .to_string(),
+    ));
     ts.add_css_class("bubble-timestamp");
 
     let actions = gtk::Box::new(gtk::Orientation::Horizontal, 4);
@@ -136,27 +143,22 @@ pub fn make_chat_bubble(message: &Message) -> gtk::Box {
 }
 
 /// Build a small circular avatar for the message sender.
-fn make_avatar(is_user: bool, role: &MessageRole) -> gtk::Box {
-    let av = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+///
+/// A plain `gtk::Label` is used because GTK ignores CSS flexbox; a label
+/// centers its text within its allocation by default, keeping the "U"/"✦"
+/// glyph truly centered inside the circle.
+fn make_avatar(is_user: bool) -> gtk::Label {
+    let av = gtk::Label::new(Some(if is_user { "U" } else { "✦" }));
     av.add_css_class("bubble-avatar");
     if is_user {
         av.add_css_class("user-avatar");
     } else {
         av.add_css_class("assistant-avatar");
     }
-    av.set_size_request(32, 32);
     av.set_valign(gtk::Align::Start);
     av.set_margin_top(4);
     av.set_margin_start(4);
     av.set_margin_end(4);
-
-    let icon = gtk::Label::new(Some(if is_user { "U" } else { "✦" }));
-    icon.set_halign(gtk::Align::Center);
-    icon.set_valign(gtk::Align::Center);
-    av.append(&icon);
-    av.set_halign(gtk::Align::Center);
-    av.set_valign(gtk::Align::Start);
-
     av
 }
 
