@@ -2,9 +2,9 @@
 name = "gtksynapse"
 version = "0.1.0"
 edition = "2021"
-authors = ["Daniel"]
+authors = ["MrHoss"]
 description = "Universal AI Desktop Client for Linux"
-license = "MIT"
+license = "GPL-3.0"
 rust-version = "1.80"
 
 [[bin]]

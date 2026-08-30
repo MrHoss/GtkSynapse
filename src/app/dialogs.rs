@@ -115,8 +115,9 @@ pub fn show_export_dialog(
 pub fn show_about_dialog(parent: &adw::ApplicationWindow) {
     let dialog = adw::AboutDialog::new();
     dialog.set_application_name("GtkSynapse");
-    dialog.set_developer_name("GtkSynapse");
-    dialog.set_copyright("© GtkSynapse");
+    dialog.set_version(env!("CARGO_PKG_VERSION"));
+    dialog.set_developer_name("MrHoss");
+    dialog.set_copyright("© MrHoss");
     dialog.set_license_type(gtk::License::MitX11);
     dialog.present(Some(parent));
 }
